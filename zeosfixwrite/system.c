@@ -13,7 +13,7 @@
 #include <utils.h>
 #include <zeos_mm.h> /* TO BE DELETED WHEN ADDED THE PROCESS MANAGEMENT CODE TO BECOME MULTIPROCESS */
 
-int zeos_ticks;
+long zeos_ticks;
 
 int (*usr_main)(void) = (void *) (PAG_LOG_INIT_CODE*PAGE_SIZE);
 unsigned int *p_sys_size = (unsigned int *) KERNEL_START;
@@ -72,12 +72,15 @@ int __attribute__((__section__(".text.main")))
   set_seg_regs(__KERNEL_DS, __KERNEL_DS, (DWord) &task[4]);
 
   /*** DO *NOT* ADD ANY CODE IN THIS ROUTINE BEFORE THIS POINT ***/
-
-  //Initialize zeos_ticks = 0
-  zeos_ticks = 0;
-
-  printk("Kernel Loaded!    ");
-
+  
+  printk_color("ZeOS by Pol Ros :)\n", B_BLUE , F_RED );
+  for (int c = 0x0; c < 0x8; ++c)
+    printc_color(' ', c , 0);
+  printc('\n');
+  for (int c = 0x0; c < 0x8; ++c)
+    printc_color(' ', c , 0);
+  printc('\n');
+  printk("Kernel Loaded!\n");
 
   /* Initialize hardware data */
   setGdt(); /* Definicio de la taula de segments de memoria */
@@ -104,6 +107,7 @@ int __attribute__((__section__(".text.main")))
 
   printk("Entering user mode...");
 
+  zeos_ticks = 0;
   enable_int();
   /*
    * We return from a 'theorical' call to a 'call gate' to reduce our privileges

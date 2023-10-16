@@ -6,14 +6,11 @@
 #include <segment.h>
 #include <hardware.h>
 #include <io.h>
-#include <errno.h>
 
 #include <zeos_interrupt.h>
 
 Gate idt[IDT_ENTRIES];
 Register    idtR;
-
-extern int zeos_ticks;
 
 char char_map[] =
 {
@@ -76,49 +73,10 @@ void setTrapHandler(int vector, void (*handler)(), int maxAccessibleFromPL)
   idt[vector].highOffset      = highWord((DWord)handler);
 }
 
-
 void clock_handler();
 void keyboard_handler();
-void pagefault_handler();
-void syscall_handler_sysenter();
-void writeMSR(long msr, long high_value, long low_value);
-
-void clock_routine()
-{
-  zeos_show_clock();
-  ++zeos_ticks;
-}
-
-char buff[1];
-
-void keyboard_routine()
-{
-  unsigned char c = inb(0x60);
-  if((c & 0x80) == 0) printc_xy(0, 0, char_map[c & 0x7F]);
-}
-
-void pagefault_routine(unsigned long error, unsigned long address)
-{ 
-  printk("\n\nProcess generates a PAGE FAULT exception at EIP: 0x");
-  
-  unsigned long aux;
-  char c;
-
-  //address = address << 12; //only need last 20 bits of address
-  
-  // divide 20 bits long into 4 bits parts, then convert these parts into chars and print them  
-  for (short i = 0; i < 8; i++) {
-    aux = address >> 28;          //aux = 4 higher bits of address
-
-    if (aux < 10) c = '0' + aux;  //convert aux to ASCII
-    else c = 'A' + (aux - 10);
-
-    printc(c);
-    address = address << 4;       //shift left address 4 bits to use the 4 higher bits the next iteration
-  }
-
-  while(1);
-}
+void system_call_handler();
+void my_page_fault_handler();
 
 void setIdt()
 {
@@ -126,19 +84,51 @@ void setIdt()
   idtR.base  = (DWord)idt;
   idtR.limit = IDT_ENTRIES * sizeof(Gate) - 1;
   
+  setInterruptHandler(14, my_page_fault_handler, 0);
   set_handlers();
 
   /* ADD INITIALIZATION CODE FOR INTERRUPT VECTOR */
-
-  setInterruptHandler(32, clock_handler, 0);
+  setInterruptHandler(32, clock_handler , 0);
   setInterruptHandler(33, keyboard_handler, 0);
-  setInterruptHandler(14, pagefault_handler, 0);
-  
-  writeMSR(0x174, 0, __KERNEL_CS);
-  writeMSR(0x175, 0, INITIAL_ESP);
-  writeMSR(0x176, 0, (long)&syscall_handler_sysenter);
-
+  setTrapHandler(0x80, system_call_handler, 3);
+  setInterruptHandler(14, my_page_fault_handler, 0);
 
   set_idt_reg(&idtR);
 }
 
+void keyboard_routine()
+{
+  unsigned char data = inb(0x60);
+  if ( (data & 0x80) != 0x00)  // check is make or break 
+    return;
+
+  char c = (char) char_map[(int)data];
+  if ( c == '\0' )
+    c = 'C';
+
+  printc_xy(72, 1, c);
+}
+
+long zeos_ticks = 0;
+
+void clock_routine()
+{
+  zeos_ticks++;
+  zeos_show_clock();
+} 
+
+void my_page_fault_routine(int address)
+{
+  printk_color("\nProcess generates a PAGE FAULT exception at EIP: 0x", B_LIGHT_GREY, F_BLACK);
+
+  char str_addres[10] = "00000000\n";
+  int i = 8;
+  char int_to_hex[16] = {'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
+  while (i--) {
+    str_addres[i] = int_to_hex[address%16];
+    address /= 16;
+  } 
+
+  printk_color(str_addres, B_LIGHT_GREY, F_BLACK);
+  while(1);
+}

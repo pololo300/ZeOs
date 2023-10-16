@@ -1,10 +1,8 @@
 #include <libc.h>
-
+#include <errno.h>
 char buff[24];
 
 int pid;
-
-void perror (void);
 
 int __attribute__ ((__section__(".text.main")))
   main(void)
@@ -12,35 +10,21 @@ int __attribute__ ((__section__(".text.main")))
     /* Next line, tries to move value 0 to CR3 register. This register is a privileged one, and so it will raise an exception */
      /* __asm__ __volatile__ ("mov %0, %%cr3"::"r" (0) ); */
 
-	int error;
+  char* p = 2;
+  *p = 'x';
 
 
-	//write
-	char buff[128] = "\n\nIt works :D\n";
-	error = write(1,buff,strlen(buff));
-	if (error < 0) perror();
-	//------------------
+  int i = 7;
+  write(10, "I'm an user!\n", 20);
+  perror();
 
-	//perror								//uncomment to test
-	//if(write(1,buff,-1) == -1) perror(); 
-	//-----------------
-
-	//gettime								//uncomment to test
-	/*
-	char buffer[8];
-	int time = gettime();
-	itoa(time,buffer);
-	write(1,buffer,strlen(buffer));
-	*/
-	//------------------
-
-	//test page fault						//uncomment to test
-	//char* p = 0;
-	//*p = 'x';
-	//------------------
+  char time[30];
+  for (int i = 0; i <10 ; ++i)
+  {
+    itoa(gettime(), time);
+    write(1,time,10);
+    write(1,"\n",10);
+  }
     
   while(1) { }
 }
-
-
-

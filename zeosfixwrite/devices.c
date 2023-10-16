@@ -7,10 +7,13 @@ struct list_head blocked;
 
 int sys_write_console(char *buffer,int size)
 {
-  int i;
+  int printed_chars = 0;
   
-  for (i=0; i<size; i++)
-    printc(buffer[i]);
-  
-  return size;
+
+  while (*buffer != '\0' && printed_chars < size)
+  {
+    printed_chars++;
+    printc(*buffer++);
+  }
+  return printed_chars;
 }

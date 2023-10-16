@@ -1,6 +1,7 @@
 /*
  * sys.c - Syscalls implementation
  */
+#include <interrupt.h>
 #include <devices.h>
 
 #include <utils.h>
@@ -17,8 +18,6 @@
 
 #define LECTURA 0
 #define ESCRIPTURA 1
-
-extern int zeos_ticks;
 
 int check_fd(int fd, int permissions)
 {
@@ -50,36 +49,28 @@ void sys_exit()
 {  
 }
 
-char buffer_so[4096];
-
-int sys_write(int fd, char * buffer, int size) 
+int sys_write(int fd, char * buffer, int size)
 {
-	//fd: file descriptor. In this delivery it must always be 1.
-	//buffer: pointer to the bytes.
-	//size: number of bytes.
-	//return ’ Negative number in case of error (specifying the kind of error) and
-	//the number of bytes written if OK. 
+  int error;
 
-	//check fd
-	int error = check_fd (fd, ESCRIPTURA);
-	if (error < 0) return -EBADF;
-	//check size
-	if (size < 0) return -EINVAL;
-	//check buffer
-	if (access_ok(VERIFY_WRITE, buffer, size) == 0) return -ENOMEM;
+  if (error = check_fd(fd, ESCRIPTURA))
+    return error;
 
+  if ( buffer == NULL)
+    return -EINVAL;
 
-	// USUARIO ESCRIBE > 4096 ???????????????
-	error = copy_from_user(buffer, buffer_so, size);
-	if (error < 0) return error;
-	error = sys_write_console(buffer_so, size);
-	if (error < 0) return error;
+  if (size < 1)
+    return -EINVAL; 
 
-	
-	return size;
+  char sys_buff[size];
+  if (copy_from_user(buffer, sys_buff, size))
+    return -EFAULT; 
+
+  return sys_write_console(sys_buff, size); 
 }
 
 int sys_gettime()
 {
-	return zeos_ticks;
+  return zeos_ticks;
 }
+

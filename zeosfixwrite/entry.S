@@ -6,7 +6,6 @@
 #include <segment.h>
 #include <errno.h>
 
-
 /**************************************************/
 /**** Save & Restore ******************************/
 /**                                              **/
@@ -63,61 +62,47 @@
       popl %ds; \
       popl %es; \
       popl %fs; \
-      popl %gs;
-      
+      popl %gs 
+
 #define EOI \
       movb $0x20, %al ; \
       outb %al, $0x20 ;
 
-ENTRY(clock_handler)
-      SAVE_ALL;
-      EOI;
-      call clock_routine;
-      RESTORE_ALL;
-      iret;
-      
+
 ENTRY(keyboard_handler)
-      SAVE_ALL;
-      call keyboard_routine;
-      EOI;
-      RESTORE_ALL;
-      iret;
+      SAVE_ALL
+      EOI
+      call keyboard_routine
+      RESTORE_ALL
+      iret
 
-ENTRY(pagefault_handler)
-      call pagefault_routine;
+ENTRY(my_page_fault_handler)
+      SAVE_ALL
+      push 0x30(%esp)
+      call my_page_fault_routine
+      add $-4, %esp
+      RESTORE_ALL
+      add $-4, %esp
+      iret
 
-ENTRY(syscall_handler_sysenter)
-      pushl $__USER_DS;
-      push %ebp;
-      pushfl;
-      push $__USER_CS;
-      push 4(%ebp);
-      SAVE_ALL;
-      cmpl $0, %eax;
-      jl sysenter_err;
-      cmpl $MAX_SYSCALL, %eax;
-      jg sysenter_err;
-      call *sys_call_table(, %eax, 0x04)
-      jmp sysenter_fin;
-sysenter_err:
-      movl $-ENOSYS, %eax;
-sysenter_fin:
-      movl %eax, 0x18(%esp);
-      RESTORE_ALL;
-      movl (%esp), %edx;
-      movl 12(%esp), %ecx;
-      sti; 
-      sysexit;
+ENTRY(clock_handler)
+      SAVE_ALL
+      EOI
+      call clock_routine
+      RESTORE_ALL
+      iret
 
-ENTRY(writeMSR)
-      push %ebp;
-      mov %esp, %ebp;
-      movl 8(%ebp), %ecx;
-      movl 12(%ebp), %edx;
-      movl 16(%ebp), %eax;
-      wrmsr;
-      movl %ebp,%esp;
-      pop %ebp;
-      ret;
-
-
+ENTRY(system_call_handler)
+      SAVE_ALL
+      cmpl $0, %EAX
+      jl err
+      cmpl $MAX_SYSCALL, %EAX
+      jg err
+      call *sys_call_table(, %EAX, 0x04)
+      jmp fin
+err:
+      movl $-ENOSYS, %EAX
+fin:
+      movl %EAX, 0x18(%esp)
+      RESTORE_ALL
+      iret
