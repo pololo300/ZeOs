@@ -71,7 +71,7 @@ void init_idle (void)
 	//Initialize field dir_pages_baseAaddr with a new directory to store the process address space
 	allocate_DIR(task1);
 
-	/*task_union de tsk */->stack[1023] = (unsigned long)(cpu_idle); //parametrizar -> warnings
+	/*task_union de tsk */->stack[1023] = (unsigned long)(cpu_idle);
 	/*task_union de tsk */->stack[1022] = (unsigned long)0;
 	//keep (in a new field of its task_struct) the position of the stack
 	//where we have stored the initial value for the ebp register. This value will be loaded
