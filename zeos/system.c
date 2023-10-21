@@ -76,8 +76,15 @@ int __attribute__((__section__(".text.main")))
   //Initialize zeos_ticks = 0
   zeos_ticks = 0;
 
-  printk("Kernel Loaded!    ");
-
+  printk_color("ZeOS by Oscar Ramos & Pol Ros :)\n", B_BLUE , F_RED );
+  // color display
+  {
+    for (int c = 0x0; c < 0x8; ++c) printc_color(' ', c , 0);
+    printc('\n');
+    for (int c = 0x0; c < 0x8; ++c) printc_color(' ', c , 0);
+    printc('\n');
+  }
+  printk("Kernel Loaded!\n");
 
   /* Initialize hardware data */
   setGdt(); /* Definicio de la taula de segments de memoria */
@@ -114,5 +121,4 @@ int __attribute__((__section__(".text.main")))
   /* The execution never arrives to this point */
   return 0;
 }
-
 
