@@ -78,8 +78,8 @@ ENTRY(clock_handler)
       
 ENTRY(keyboard_handler)
       SAVE_ALL;
-      EOI;
       call keyboard_routine;
+      EOI;
       RESTORE_ALL;
       iret;
 
@@ -137,5 +137,26 @@ ENTRY(writeMSR)
       movl %ebp,%esp;
       pop %ebp;
       ret;
+
+
+ENTRY(task_switch)
+      pushl %ebp;
+      movl %esp, %ebp;
+      pushl %ebx;
+      pushl %esi;
+      pushl %edi;
+
+      pushl 8(%ebp);
+      call inner_task_switch;
+      addl $4, %esp;
+
+      popl %edi;
+      popl %esi;
+      popl %ebx;
+      movl %ebp, %esp;
+      popl %ebp;
+
+
+
 
 

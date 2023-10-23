@@ -38,9 +38,14 @@ page_table_entry * get_PT (struct task_struct *t)
 	return (page_table_entry *)(((unsigned int)(t->dir_pages_baseAddr->bits.pbase_addr))<<12);
 }
 
-void task_switch(union task_union*t)
+void inner_task_switch(union task_union *new)
 {
   //implementar task switch, m'he quedat aqui
+	//a aquesta funcio la crida task_switch(entry.S)
+  tss.esp0 = (unsigned long) &(new->stack[KERNEL_STACK_SIZE]);
+  writeMSR(0x175, 0, (unsigned long) &(new->stack[KERNEL_STACK_SIZE]));
+  set_cr3(new->task.dir_pages_baseAddr);
+  inner_task_switch_ASM();
 }
 
 int allocate_DIR(struct task_struct *t) 
@@ -76,7 +81,7 @@ void init_idle (void)
 	//Assign PID 0 to the process
 	idle_ts-> PID = 0;
 
-	//Initialize field dir_pages_baseAaddr with a new directory to store the process address space
+	//Initialize field dir_pages_baseAddr with a new directory to store the process address space
 	allocate_DIR(idle_ts);
 
   long *stack = (long*)((union task_union *) idle_ts);
@@ -89,7 +94,6 @@ void init_idle (void)
   idle_ts -> ksp = stack[KERNEL_STACK_SIZE -2];
 
   idle_task = idle_ts;
-
 }
 
 void init_task1(void)
@@ -98,19 +102,16 @@ void init_task1(void)
 	list_del(aviable);
 	struct task_struct *init = list_head_to_task_struct(aviable);
 
-	//Assign PID 0 to the process
-	init -> PID = 0; 
+	//Assign PID 1 to the process
+	init -> PID = 1; 
 
   // Initialize a new directory for the process address space
   allocate_DIR(init);
   // Complete the initialization of its address space
   set_user_pages(init);
 
-  // no se quin es
-  tss.esp = ((long*)((union task_union *) init))[KERNEL_STACK_SIZE-1];
-  // tss.esp0 = ((long*)((union task_union *) init))[KERNEL_STACK_SIZE-1];
-  // tss.esp1 = ((long*)((union task_union *) init))[KERNEL_STACK_SIZE-1];
-  // tss.esp2 = ((long*)((union task_union *) init))[KERNEL_STACK_SIZE-1];
+  tss.esp0 = ((long*)((union task_union *) init))[KERNEL_STACK_SIZE];
+  
   set_cr3(init->dir_pages_baseAddr);
 }
 
