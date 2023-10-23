@@ -19,6 +19,7 @@ struct task_struct {
   page_table_entry * dir_pages_baseAddr;
   int ksp; 
   struct list_head list;
+  unsigned long * ini_val_ebp;
 };
 
 union task_union {
