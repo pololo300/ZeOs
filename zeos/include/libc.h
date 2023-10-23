@@ -14,6 +14,7 @@ void itoa(int a, char *b);
 
 int strlen(char *a);
 
+int gettime();
 int getpid();
 
 int fork();

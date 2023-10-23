@@ -30,6 +30,8 @@ void itoa(int a, char *b)
   b[i]=0;
 }
 
+int gettime();
+
 int strlen(char *a)
 {
   int i;

@@ -18,11 +18,11 @@ extern int zeos_ticks;
 char char_map[] =
 {
   '\0','\0','1','2','3','4','5','6',
-  '7','8','9','0','\'','ก','\0','\0',
+  '7','8','9','0','\'','ยก','\0','\0',
   'q','w','e','r','t','y','u','i',
   'o','p','`','+','\0','\0','a','s',
-  'd','f','g','h','j','k','l','๑',
-  '\0','บ','\0','็','z','x','c','v',
+  'd','f','g','h','j','k','l','รฑ',
+  '\0','ยบ','\0','รง','z','x','c','v',
   'b','n','m',',','.','-','\0','*',
   '\0','\0','\0','\0','\0','\0','\0','\0',
   '\0','\0','\0','\0','\0','\0','\0','7',
@@ -106,7 +106,7 @@ void keyboard_routine()
 
 void pagefault_routine(unsigned long error, unsigned long address)
 { 
-  printk("\n\nProcess generates a PAGE FAULT exception at EIP: 0x");
+  printk_color("\n\nProcess generates a PAGE FAULT exception at EIP: 0x", B_RED, F_WHITE);
   
   unsigned long aux;
   char c;
@@ -120,7 +120,7 @@ void pagefault_routine(unsigned long error, unsigned long address)
     if (aux < 10) c = '0' + aux;  //convert aux to ASCII
     else c = 'A' + (aux - 10);
 
-    printc(c);
+    printc_color(c, B_RED, F_WHITE);
     address = address << 4;       //shift left address 4 bits to use the 4 higher bits the next iteration
   }
 
@@ -149,4 +149,3 @@ void setIdt()
 
   set_idt_reg(&idtR);
 }
-

@@ -50,7 +50,6 @@ void sys_exit()
 {  
 }
 
-char buffer_so[4096];
 
 int sys_write(int fd, char * buffer, int size) 
 {
@@ -66,15 +65,27 @@ int sys_write(int fd, char * buffer, int size)
 	//check size
 	if (size < 0) return -EINVAL;
 	//check buffer
-	if (access_ok(VERIFY_WRITE, buffer, size) == 0) return -ENOMEM;
+	if (!access_ok(VERIFY_WRITE, buffer, size)) return -ENOMEM;
 
+  int real_size = 0;
+  int frame = 256;
+  char buffer_so[frame];
 
-	// USUARIO ESCRIBE > 4096 ???????????????
-	error = copy_from_user(buffer, buffer_so, size);
-	if (error < 0) return error;
+  while (0 < size)
+  {
+    if (size < frame) frame = size;
+    error = copy_from_user(buffer, buffer_so, frame);
+  	if (error < 0) return error;
+    
+    int ret = sys_write_console(buffer_so, frame);
+    if (ret < 0) return ret;
+  
+    buffer += frame;
+    real_size += ret;
+    size -= frame;
+  }
 
-
-	return sys_write_console(buffer_so, size);
+  return real_size;
 }
 
 int sys_gettime()
