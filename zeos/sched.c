@@ -67,7 +67,7 @@ void cpu_idle(void)
 
 void init_idle (void)
 {	
-//<<<<<<< divendres
+
 	//Get an available task_union from the freequeue to contain the characteristics of this process
 	struct list_head *aviable = list_first(&freequeue);
 	list_del(aviable);
@@ -89,25 +89,7 @@ void init_idle (void)
   idle_ts -> ksp = stack[KERNEL_STACK_SIZE -2];
 
   idle_task = idle_ts;
-=======
-	struct task_struct *idle_task = list_head_to_task_struct(&freequeue);
-  	list_del(&freequeue);
 
-  	idle_task->PID = 0;
-  	allocate_DIR(idle_task);
-	
-	union task_union * idle_task_union = (union task_union *)idle_task;
-
-	//Store in the stack of the idle process the address of the code that it will execute (address of the cpu_idle function).
-	(*idle_task_union).stack[KERNEL_STACK_SIZE-1] = (unsigned long)cpu_idle;
-	//Store in the stack the initial value that we want to assign to register ebp when undoing the dynamic link (it can be 0)
-	(*idle_task_union).stack[KERNEL_STACK_SIZE-2] = (unsigned long)0;
-
-	//Finally, we need to keep (in a new field of its task_struct) the position of the stack
-	//where we have stored the initial value for the ebp register. This value will be loaded
-	//in the esp register when undoing the dynamic link.
-	idle_task->ini_val_ebp = &(idle_task_union->stack[KERNEL_STACK_SIZE-2]);
-//>>>>>>> main
 }
 
 void init_task1(void)
