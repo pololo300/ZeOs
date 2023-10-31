@@ -36,11 +36,13 @@ int __attribute__ ((__section__(".text.main")))
 	//------------------
 
 	//test page fault						//uncomment to test
-	char* p = 0;
-	*p = 'x';
+	// char* p = 0;
+	// *p = 'x';
 	//------------------
     
-  while(1) { }
+  while(1) { 
+  	//write(1,"c",1);
+  }
 }
 
 

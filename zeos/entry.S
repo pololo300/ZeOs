@@ -139,3 +139,48 @@ ENTRY(writeMSR)
       ret;
 
 
+ENTRY(get_ebp)
+      push %ebp;
+      movl %esp, %ebp;
+
+      movl %ebp, %eax; 
+
+      movl %ebp,%esp;
+      pop %ebp;
+      ret;
+
+ENTRY(set_esp)
+      push %ebp;
+      movl %esp, %ebp;
+
+      movl 8(%ebp), %esp; 
+
+      movl %ebp,%esp;
+      pop %ebp;
+      ret;
+
+ENTRY(restore_ebp_from_stack)
+      pop %ebp;
+      ret;
+      
+ENTRY(task_switch)
+      pushl %ebp;
+      movl %esp, %ebp;
+      pushl %esi;
+      pushl %edi;
+      pushl %ebx;
+      pushl 8(%ebp);
+      call inner_task_switch;
+      addl $4, %esp;
+      popl %ebx;
+      popl %edi;
+      popl %esi;
+      popl %ebp;
+      ret;
+
+ENTRY(inner_task_switch_ASM)
+      movl 4(%esp), %eax;
+      movl %ebp, (%eax);
+      movl 8(%esp), %esp;
+      popl %ebp;
+      ret;
