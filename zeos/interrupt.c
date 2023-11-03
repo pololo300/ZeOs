@@ -8,6 +8,7 @@
 #include <hardware.h>
 #include <io.h>
 #include <errno.h>
+#include <utils.h>
 
 #include <zeos_interrupt.h>
 
@@ -87,10 +88,16 @@ void pagefault_handler();
 void syscall_handler_sysenter();
 void writeMSR(long msr, long high_value, long low_value);
 
+struct list_head freequeue;
+struct list_head readyqueue;
+
 void clock_routine()
 {
+
   zeos_show_clock();
   ++zeos_ticks;
+
+  schedule();
 }
 
 char buff[1];
@@ -107,8 +114,16 @@ void keyboard_routine()
 
   printc_xy(72, 1, c);
 
-  if ( c == 'i' ) task_switch((union task_union *) idle_task);
-  else if ( c == 'u') task_switch((union task_union *) init_task);
+  if ( c == 'i' ) 
+  {
+    task_switch((union task_union *) idle_task);
+    printk_color("\nSWICHED TO IDLE\n", B_LIGHT_GREY, F_BLACK);
+  }
+  else if ( c == 'u') 
+  {
+    task_switch((union task_union *) init_task);
+    printk_color("\nSWICHED TO USER\n", B_LIGHT_GREY, F_BLACK);
+  }
 }
 
 void pagefault_routine(unsigned long error, unsigned long address)
