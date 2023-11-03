@@ -53,6 +53,7 @@ void sys_exit()
 
 int sys_write(int fd, char * buffer, int size) 
 {
+  
 	//fd: file descriptor. In this delivery it must always be 1.
 	//buffer: pointer to the bytes.
 	//size: number of bytes.

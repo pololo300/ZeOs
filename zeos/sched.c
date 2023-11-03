@@ -3,6 +3,7 @@
  */
 
 #include "types.h"
+#include "utils.h"
 #include <io.h>
 #include <list.h>
 #include <mm.h>
@@ -45,13 +46,23 @@ void writeMSR(long msr, long high_value, long low_value);
 
 void inner_task_switch(union task_union *new)
 {
+
+  struct task_struct *new_task = (struct task_struct *) new;
+
   page_table_entry *new_DIR = get_DIR(&new->task);
 
+  // change esp0
   tss.esp0=(unsigned long)&(new->stack[KERNEL_STACK_SIZE]);
+  //  tss.esp0=(unsigned long)(new_task->ksp); //stack[KERNEL_STACK_SIZE]);
+  // writeMSR
   writeMSR(0x175, 0, (unsigned long)&(new->stack[KERNEL_STACK_SIZE]));
+  //writeMSR(0x175, 0, (unsigned long)(new_task->ksp));   
+  current()-> ksp = get_ebp();
 
+  // upate new dir
   set_cr3(new_DIR);
-
+  
+  set_esp(current()->ksp);
   inner_task_switch_ASM(&current()->ksp, new->task.ksp);
 
 }
@@ -67,11 +78,9 @@ int allocate_DIR(struct task_struct *t) {
 }
 
 void cpu_idle(void) {
-  printk_color("IDLE PROCESS RUNNING", B_MAGENTA, F_BLACK);
   __asm__ __volatile__("sti" : : : "memory");
 
   while (1) {
-    printk("idle");
   }
 }
 
@@ -144,4 +153,91 @@ struct task_struct *current() {
 
   __asm__ __volatile__("movl %%esp, %0" : "=g"(ret_value));
   return (struct task_struct *)(ret_value & 0xfffff000);
+}
+
+int current_ticks = 0;
+
+int get_quantum (struct task_struct *t)
+{
+  return t->quantum;
+}
+
+void set_quantum (struct task_struct *t, int new_quantum)
+{
+  t->quantum = new_quantum;
+}
+
+void init_stats (struct task_struct *t)
+{
+  t->state.user_ticks = 0;
+  t->state.ready_ticks = 0;
+  t->state.total_trans = 0;
+  t->state.system_ticks = 0;
+  t->state.blocked_ticks = t->quantum;
+  t->state.remaining_ticks = 0;
+  t->state.elapsed_total_ticks = get_ticks();
+}
+
+
+void stat_user_to_system()
+{
+  current()->state.user_ticks += get_ticks() - current()->state.elapsed_total_ticks; 
+  current()->state.elapsed_total_ticks = get_ticks();
+}
+
+void stat_system_to_user()
+{
+  current()->state.system_ticks += get_ticks()-current()->state.elapsed_total_ticks;
+  current()->state.elapsed_total_ticks = get_ticks();
+}
+
+void stat_system_to_ready()
+{
+  current()->state.system_ticks += get_ticks()-current()->state.elapsed_total_ticks;
+  current()->state.elapsed_total_ticks = get_ticks();
+}
+void stat_ready_to_system()
+{
+  current()->state.ready_ticks += get_ticks()-current()->state.elapsed_total_ticks;
+  current()->state.elapsed_total_ticks = get_ticks();
+}
+
+void sched_next_rr()
+{
+  struct task_struct *next = list_head_to_task_struct(&freequeue);
+  task_switch((union task_union *)next);
+  current_ticks = current()->quantum;
+}
+
+void update_process_state_rr(struct task_struct *t, struct list_head *dest)
+{
+  // add to new list (NULL = CURRENT)
+  if ( dest != NULL)
+    list_add( &((struct task_struct *) t)->list , dest);
+
+  if ( current() != t)
+    // if is not running we delete t from its queue
+    list_del( &((struct task_struct *) t)->list);
+}
+
+void schedule(){
+  update_sched_data_rr();
+  if ( needs_sched_rr()  && !list_empty(readyqueue))
+  {
+    stat_system_to_ready();
+    update_process_state_rr(current(), &readyqueue);
+    sched_next_rr(); // we changed the process
+    stat_ready_to_system();
+  }
+
+}
+
+int needs_sched_rr()
+{
+  return !current_ticks;
+}
+
+void update_sched_data_rr()
+{
+  current_ticks--;  
 }
