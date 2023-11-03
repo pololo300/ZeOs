@@ -23,11 +23,14 @@ int __attribute__ ((__section__(".text.main")))
 	//------------------
 
 	//perror								//uncomment to test
+	char buff1[128] = "\nPerror:\n";
+	error = write(1,buff1,strlen(buff1));
 	if(write(1,buff,-1) == -1) perror(); 
 	//-----------------
 
 	//gettime								//uncomment to test
-	
+	char buff2[128] = "\nGettime: ";
+	error = write(1,buff2,strlen(buff2));
 	char buffer[8];
 	int time = gettime();
 	itoa(time,buffer);
@@ -36,11 +39,24 @@ int __attribute__ ((__section__(".text.main")))
 	//------------------
 
 	//test page fault						//uncomment to test
-	char* p = 0;
-	*p = 'x';
+	// char* p = 0;
+	// *p = 'x';
+	//------------------
+
+	//getpid
+	
+	char buff3[128] = "\nGetpid: ";
+	error = write(1,buff3,strlen(buff3));
+	char buffer1[8];
+	int p = getpid();
+	itoa(p,buffer1);
+    write(1,buffer1,strlen(buffer1));
+    
 	//------------------
     
-  while(1) { }
+  while(1) { 
+  	//write(1,"c",1);
+  }
 }
 
 

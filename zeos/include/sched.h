@@ -17,7 +17,7 @@ enum state_t { ST_RUN, ST_READY, ST_BLOCKED };
 struct task_struct {
   int PID;			/* Process ID. This MUST be the first field of the struct. */
   page_table_entry * dir_pages_baseAddr;
-  unsigned long ksp; 
+  unsigned long *ksp; 
   struct list_head list;
 };
 
@@ -41,6 +41,13 @@ void init_idle(void);
 void init_sched(void);
 
 struct task_struct * current();
+
+void task_switch(union task_union *t);
+unsigned long *  get_ebp();
+void set_esp(unsigned long * esp);
+void restore_ebp_from_stack();
+
+void inner_task_switch(union task_union *t);
 
 void task_switch(union task_union*t);
 

@@ -1,6 +1,7 @@
 /*
  * interrupt.c -
  */
+#include <sched.h>
 #include <types.h>
 #include <interrupt.h>
 #include <segment.h>
@@ -12,6 +13,9 @@
 
 Gate idt[IDT_ENTRIES];
 Register    idtR;
+
+struct task_struct * idle_task;
+struct task_struct * init_task;
 
 extern int zeos_ticks;
 
@@ -102,6 +106,9 @@ void keyboard_routine()
     c = 'C';
 
   printc_xy(72, 1, c);
+
+  if ( c == 'i' ) task_switch((union task_union *) idle_task);
+  else if ( c == 'u') task_switch((union task_union *) init_task);
 }
 
 void pagefault_routine(unsigned long error, unsigned long address)

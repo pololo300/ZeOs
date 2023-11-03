@@ -100,3 +100,12 @@ ret_gett:
 #  mov   %ebp, %esp
 #  pop   %ebp
 #  ret
+
+
+ENTRY(getpid)
+      pushl %ebp;
+      movl %esp, %ebp;
+      movl $20, %eax;
+      sysenter;
+      popl %ebp;
+      ret;

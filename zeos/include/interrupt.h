@@ -12,6 +12,9 @@
 extern Gate idt[IDT_ENTRIES];
 extern Register idtR;
 
+extern struct task_struct * idle_task;
+extern struct task_struct * init_task;
+
 void setInterruptHandler(int vector, void (*handler)(), int maxAccessibleFromPL);
 void setTrapHandler(int vector, void (*handler)(), int maxAccessibleFromPL);
 
