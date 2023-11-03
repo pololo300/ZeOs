@@ -103,9 +103,17 @@ ret_gett:
 
 
 ENTRY(getpid)
-      pushl %ebp;
-      movl %esp, %ebp;
-      movl $20, %eax;
-      sysenter;
-      popl %ebp;
-      ret;
+    pushl %ebp;
+    movl %esp, %ebp;
+    movl $20, %eax;
+    sysenter;
+    popl %ebp;
+    ret;
+
+ENTRY(fork)
+    pushl %ebp;
+    movl %esp, %ebp;
+    movl $2, %eax;
+    sysenter;
+    popl %ebp;
+    ret;

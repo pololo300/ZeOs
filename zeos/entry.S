@@ -93,7 +93,6 @@ ENTRY(syscall_handler_sysenter)
       push $__USER_CS;
       push 4(%ebp);
       SAVE_ALL;
-      call stat_user_to_system;
       cmpl $0, %eax;
       jl sysenter_err;
       cmpl $MAX_SYSCALL, %eax;
@@ -103,7 +102,6 @@ ENTRY(syscall_handler_sysenter)
 sysenter_err:
       movl $-ENOSYS, %eax;
 sysenter_fin:
-      call stat_system_to_user;
       movl %eax, 0x18(%esp);
       RESTORE_ALL;
       movl (%esp), %edx;
@@ -186,4 +184,4 @@ ENTRY(inner_task_switch_ASM)
       movl 8(%esp), %esp;
       popl %ebp;
       ret;
-      
+

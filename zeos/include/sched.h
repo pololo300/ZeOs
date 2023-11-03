@@ -1,10 +1,10 @@
 /*
  * sched.h - Estructures i macros pel tractament de processos
  */
+
 #ifndef __SCHED_H__
 #define __SCHED_H__
 
-#include <stats.h>
 #include <list.h>
 #include <types.h>
 #include <mm_address.h>
@@ -12,18 +12,14 @@
 #define NR_TASKS      10
 #define KERNEL_STACK_SIZE	1024
 
-
 enum state_t { ST_RUN, ST_READY, ST_BLOCKED };
 
 struct task_struct {
   int PID;			/* Process ID. This MUST be the first field of the struct. */
   page_table_entry * dir_pages_baseAddr;
   unsigned long *ksp; 
-  long quantum;
-  struct stats state;
   struct list_head list;
 };
-
 
 union task_union {
   struct task_struct task;
@@ -63,19 +59,10 @@ page_table_entry * get_PT (struct task_struct *t) ;
 
 page_table_entry * get_DIR (struct task_struct *t) ;
 
-int get_quantum (struct task_struct *t);
-void set_quantum (struct task_struct *t, int new_quantum);
-void init_stats (struct task_struct *t);
-
-void stat_user_to_system();
-void stat_system_to_user();
-void stat_system_to_ready();
-void stat_ready_to_system();
 /* Headers for the scheduling policy */
 void sched_next_rr();
 void update_process_state_rr(struct task_struct *t, struct list_head *dest);
 int needs_sched_rr();
 void update_sched_data_rr();
 
-void schedule();
 #endif  /* __SCHED_H__ */
